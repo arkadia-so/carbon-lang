@@ -111,7 +111,7 @@ jobs:
         # One namespace for Bazel's entries across rounds, as upstream's bucket outlives runs; the
         # verdicts use the round's own namespace (OUTRUN_CACHE_TEAM).
         env:
-          OUTRUN_CACHE_TEAM: carbon-bazel
+          OUTRUN_CACHE_TEAM: carbon-bazel2
         run: |
           nohup .github/outrun/run bazel-cache --port 7071 > "$RUNNER_TEMP/bazel-cache.log" 2>&1 &
           for _ in $(seq 50); do curl -s -o /dev/null http://127.0.0.1:7071/ && break; sleep 0.2; done
