@@ -1,0 +1,48 @@
+{
+  "inputs": [],
+  "env": [],
+  "suites": [],
+  "trustedRef": "refs/heads/bench/engine",
+  "commands": [
+    {
+      "name": "test:ubuntu-22.04-arm-Default",
+      "run": "bazel test //... (ubuntu-22.04-arm, Default)",
+      "inputs": [
+        "**/*",
+        "!**/*.md",
+        "!LICENSE",
+        "!CODEOWNERS"
+      ]
+    },
+    {
+      "name": "test:ubuntu-22.04-arm-Opt",
+      "run": "bazel test -c opt //... (ubuntu-22.04-arm, Opt)",
+      "inputs": [
+        "**/*",
+        "!**/*.md",
+        "!LICENSE",
+        "!CODEOWNERS"
+      ]
+    },
+    {
+      "name": "test:macos-26-Default",
+      "run": "bazel test //... (macos-26, Default)",
+      "inputs": [
+        "**/*",
+        "!**/*.md",
+        "!LICENSE",
+        "!CODEOWNERS"
+      ]
+    },
+    {
+      "name": "test:macos-26-Opt",
+      "run": "bazel test -c opt //... (macos-26, Opt)",
+      "inputs": [
+        "**/*",
+        "!**/*.md",
+        "!LICENSE",
+        "!CODEOWNERS"
+      ]
+    }
+  ]
+}
