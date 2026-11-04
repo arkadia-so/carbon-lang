@@ -64,11 +64,11 @@ runs:
         # two copies of every output taking up disk space. The only way to
         # disable the disk cache is with an empty string:
         # https://github.com/bazelbuild/bazel/issues/5308
-        build --disk_cache=
+        build --disk_cache=$HOME/.cache/bazel-disk
+        build --repository_cache=$HOME/.cache/bazel-repo
 
         # Enable remote cache for our CI but minimize downloads.
-        build --remote_cache=https://storage.googleapis.com/carbon-builds-github-v${CACHE_VERSION}
-        build --remote_download_outputs=minimal
+        # ARK-81 bench: no remote cache (layer 1 only), the disk cache above instead.
 
         # Allow passing targets that are incompatible so that our explicit
         # target lists work more like //... wild card patterns in CI. In CI,
@@ -89,7 +89,6 @@ runs:
         # those.
         build --action_env=BAZEL_REMOTE_CACHE_KEY=github-action-${{ inputs.matrix_runner }}
 
-        build ${{ inputs.remote_cache_upload }}
 
         # Set an artificially high jobs count. This flag controls the number
         # of concurrency Bazel itself uses, which is essential for actions

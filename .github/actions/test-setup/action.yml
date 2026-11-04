@@ -97,7 +97,7 @@ runs:
     # clean tree. We don't expect this to be an interactive path and so don't
     # optimize the latency of this step.
     - name: Using all targets for push
-      if: steps.filter.outputs.has_code == 'true' && github.event_name == 'push'
+      if: steps.filter.outputs.has_code == 'true' && github.event_name != 'pull_request' && github.event_name != 'merge_group'
       shell: bash
       env:
         TARGETS_FILE: ${{ inputs.targets_file }}
@@ -110,7 +110,7 @@ runs:
     # all of the unaffected Bazel targets.
     - name: Compute indirect pull request targets
       if:
-        steps.filter.outputs.has_code == 'true' && github.event_name != 'push'
+        steps.filter.outputs.has_code == 'true' && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
         && inputs.use_direct_targets != 'true'
       shell: bash
       env:
@@ -135,7 +135,7 @@ runs:
     # Run the query to generate the targets file.
     - name: Compute direct pull request targets
       if:
-        steps.filter.outputs.has_code == 'true' && github.event_name != 'push'
+        steps.filter.outputs.has_code == 'true' && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
         && inputs.use_direct_targets == 'true'
       shell: bash
       env:

@@ -9,6 +9,7 @@ on:
     branches: [trunk, action-test]
   pull_request:
   merge_group:
+  workflow_dispatch:
 
 permissions:
   contents: read # For actions/checkout.
@@ -29,7 +30,7 @@ jobs:
       matrix:
         # Test a recent version of each supported OS, covering both x86-64 and
         # AArch64: Linux on x86-64 and AArch64, and macOS on AArch64.
-        runner: ['ubuntu-22.04', 'ubuntu-22.04-arm', 'macos-26']
+        runner: ['ubuntu-22.04-arm', 'macos-26']
         # Create a synthetic matrix dimension with the event name for filtering.
         event: ['${{ github.event_name }}']
         config:
@@ -46,7 +47,8 @@ jobs:
             config: { name: 'ASan', flags: '--config=asan' }
           - event: 'merge_group'
             config: { name: 'ASan', flags: '--config=asan' }
-    runs-on: ${{ matrix.runner }}
+    # ARK-81 bench: the matrix keeps upstream's runner names (the setup actions branch on them), mapped to outrun's labels.
+    runs-on: ${{ matrix.runner == 'macos-26' && 'outrun-macos' || 'outrun-linux-arm64' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -86,6 +88,29 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+
+      # ARK-81 bench: outrun's images have no bazelisk (GitHub's runner images do).
+      - name: 'outrun: install bazelisk'
+        shell: bash
+        run: |
+          if ! command -v bazelisk >/dev/null; then
+            os=$(uname -s | tr A-Z a-z); arch=$(uname -m); [ "$arch" = aarch64 ] && arch=arm64; [ "$arch" = x86_64 ] && arch=amd64
+            mkdir -p "$HOME/.local/bin"
+            curl -fsSL -o "$HOME/.local/bin/bazelisk" "https://github.com/bazelbuild/bazelisk/releases/download/v1.28.1/bazelisk-$os-$arch"
+            chmod +x "$HOME/.local/bin/bazelisk"
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
+
+      # ARK-81 bench, layer 1 only: Bazel's disk and repository caches kept between runs with actions/cache,
+      # instead of upstream's remote cache (a GCS bucket whose write key a fork does not have).
+      - name: 'outrun: Bazel disk and repository caches'
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: |
+            ~/.cache/bazel-disk
+            ~/.cache/bazel-repo
+          key: bazel-${{ matrix.runner }}-${{ matrix.config.name }}-${{ github.sha }}
+          restore-keys: bazel-${{ matrix.runner }}-${{ matrix.config.name }}-
 
       - id: test-setup
         uses: ./.github/actions/test-setup
